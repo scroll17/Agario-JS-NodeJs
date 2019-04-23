@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="viewport" content="width=device-width,user-scalable=no"/>
+		<link rel="stylesheet" media="screen" href="styles.css" >
+
+		<title>Form</title>
+
+		<!-- Загрузка сетевой библиотеки Socket.io -->
+		<script src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript">
+			let port = 3000;
+			let socket = io.connect('http://localhost:' + port);
+
+			socket.on('newUser',user => {
+				console.log(`New user : ${user}`);
+			});
+
+		</script>
+
+		<link rel="shortcut icon" href="input-gaming.ico" type="image/x-icon">
+	</head>
+
+	<body bgcolor="DimGrey" background="bg.png">
+
+		<div id="form-client" style="background:#330099;width:575px;margin:400px auto 5px;position:relative;z-index:250">
+			<form  class="contact_form" action="#" method="post" name="contact_form">
+			    <ul>
+			        <li>
+			            <label for="name" style="color:#CCCCFF">Введите имя:</label>
+			            <input id="input" type="text" placeholder="You'r nick" required />
+						<!-- autofocus -->
+			        </li>
+			        <li>
+			        	<button id="button" class="submit" type="submit">Начать играть</button>
+			        </li>
+			    </ul>
+			</form>
+		</div>
+
+	    <div id="game">
+			<script type="text/javascript" src="pointjs_0.2.0.3.js"></script>
+
+			<script type="text/javascript" src="form.js"></script>
+
+			<script id="game-script1" type="text/javascript">
+
+				var pjs = new PointJS(1100, 620, {backgroundColor: ''})//Объявление движка
+
+				pjs.system.initFullPage(); // полнокранный режим (тут ширина и высота изменилась под экран)
+
+				var game = pjs.game; // Менеджер игрового ми
+				var mouse = pjs.mouseControl; // Доступ к
+				mouse.initControl(); //			 использованию миши
+				var r = pjs.math.random; // Генерация псевдослучайных чисел
+
+				var fon=[], s = 50;
+
+				for (var x = 0; x<100; x++) {
+					for (var y = 0; y<100; y++) {
+						fon.push(
+					    	game.newRectObject({
+					     		x : x*s, 					// Границы игрового поля
+					     		y : y*s,
+					    		w : s-1,
+					     		h : s-1,
+					     		fillColor : "gray",
+					   		})
+				      	);
+				 }}
+
+				var player = game.newCircleObject({ 	//
+				     x : r(0, 5000), 						//
+					 y : r(0, 5000), 							// Генерация главного героя ))
+				     radius : 25,						//
+				     fillColor : "blue"					//
+				   });
+
+				var namePlayer = game.newTextObject({
+					 x : r(0, 5000), 						//
+					 y : r(0, 5000),
+				     text : "NAME",
+				     size : 15,
+				     color : "white",
+				     //strokeColor : "black",
+				   });
+
+
+				var eat =[];										//
+																	//
+				for (var i = 0; i<3000; i++) {						//
+				 	eat.push(											//
+				   		game.newCircleObject({ 								//
+						    x : r(0, 5000), 								//
+						    y : r(0, 5000), 								// Прорисовка еды
+						    radius : r(3, 10), 								//
+						    fillColor : pjs.colors.randomColor(0, 255)		//
+				   		})
+				    );
+				}
+
+
+				var b = player.radius;
+				var bN = namePlayer.size;
+				let score = 0;
+
+				let players = [];
+				/*function CreateNewPlayer(X_p,Y_p,Radius_p,Size_p,Name_p){
+					this.pl = game.newCircleObject({ 	//
+					     x : X_p,						//
+						 y : Y_p,							// Генерация главного героя ))
+					     radius : Radius_p,						//
+					     fillColor : "blue"					//
+					   });
+					this.namp = game.newTextObject({
+						 x : this.pl.p_x, 						//
+						 y : this.pl.p_y,
+					     text : Name_p,
+					     size : Size_p,
+					     color : "white",
+					   });
+				};*/
+
+				game.newLoop('game', function () {	// Создание нового игрового цикла
+
+					for (var i in fon) {
+				 		if (fon[i].isInCamera()) {      // Опять цикл работы с границами поля
+				  			fon[i].draw();
+				 		}
+					}
+
+					for (var i in eat) {
+				 		if (eat[i].isInCamera()) {   // Физика еды
+
+				  			eat[i].draw();
+
+				  			if (player.getDistanceC(eat[i].getPosition(1)) < player.radius+eat[i].radius + 20) {
+
+				  				eat[i].moveTimeC(player.getPositionC(), 40); // Процесс притягивания еды
+				  			}
+
+
+				  			if (player.getDistanceC(eat[i].getPosition(1)) < player.radius+eat[i].radius) {
+
+				   				eat.splice(i, 1);
+
+				   				b+=0.2;                    // Рост главного героя ))
+								bN+=0.05;
+								score++;
+
+				   				player.setRadiusC(b);
+								namePlayer.setSizeC(bN);
+
+				   				scoreApp(+1);
+				  			}
+
+				 		}
+					}
+
+
+					if (eat.length<2900) {
+						for (var i = 0; i<5000; i++) {
+				  			eat.push(
+				   				game.newCircleObject({
+								    x : r(0, 5000),
+								    y : r(0, 5000), 					// Вроде как автоматическая генерация еды
+								    radius : r(3, 10),
+								    fillColor : pjs.colors.randomColor(0, 255)
+				   				})
+				    		);
+				 		}
+					}
+
+					player.moveTimeC(mouse.getPosition(), player.radius*4); // Движение камеры за кругом, и движение самого круга
+
+					pjs.camera.setPositionC(player.getPosition(1)); //Фиксация камеры за шаром
+					namePlayer.setPositionC(player.getPosition(1));
+
+					player.draw(); // Прорисовка игрока
+					namePlayer.draw();
+
+					//setInterval(()=>{
+						socket.emit('new-player-position',{
+							x: player.getPositionC(1).x,
+							y: player.getPositionC(1).y,
+							radius: player.getRadius(),
+							size_text: namePlayer.getText(),
+							name: nameP,
+							point: score,
+							id:''
+						});
+					//},100);
+
+
+					if (player.x < 15)	{  player.x = 15;};
+					if (player.y < 5)	{  player.y = 5; };
+															// Условия выхода за поле игры
+					if (player.x > 5000 - 2*player.radius){  player.x = 5000 - 2*player.radius; };
+					if (player.y > 5000 - 2*player.radius){  player.y = 5000 - 2*player.radius; };
+
+				}) // закончился ировой цикл myGame
+
+				socket.on('create-new-player',(new_player)=>{
+					let pl,namePl;
+
+						pl = game.newCircleObject({
+							 x : new_player.x,
+							 y : new_player.y,
+							 radius : new_player.radius,
+							 fillColor : "blue"
+						 });
+
+						 namePl = game.newTextObject({
+							x : new_player.x, 						//
+							y : new_player.y,
+							text : new_player.name,
+							size : new_player.size_text,
+							color : "white",
+						});
+
+					pl.draw();
+					namePl.draw();
+
+					let player_to_draw = {pl, namePl};
+					players[new_player.id] = player_to_draw;
+
+					console.log('Draw new player \nx:',pl.getPositionC(1),'\n y: ',namePl.getPositionC(1));
+				});
+
+			game.setLoop('game');
+
+			</script>
+		</div>
+
+
+
+	</body>
+</html>
