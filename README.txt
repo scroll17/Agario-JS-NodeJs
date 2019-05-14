@@ -6,6 +6,4 @@ which converts JavaScript from a specialized language into a
 general-purpose language - "NodeJS", as well as a module for 
 this platform - "SocketIO".
 
-Telegram:
-    Alexandr - @CuTpyc
-    Denis - @sckroll 
+Telegram: @sckroll 
